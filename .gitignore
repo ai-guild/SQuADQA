@@ -1,0 +1,13 @@
+.cache
+.*swp
+*~
+log/
+*.log
+dataset/
+*.pyc
+__pycache__/
+.ipynb_checkpoints
+*.ipynb
+*.pkl
+*.bin
+*.txt
