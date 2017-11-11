@@ -108,6 +108,9 @@ def char_indices_to_word_indices(s, e, context):
     start = offset
     end = offset + len(word_tokenize(sub))
 
+    assert start < len(word_tokenize(context)), (context, s, e)
+    assert end <= len(word_tokenize(context)), (context, s, e)
+
     return start, end
 
 '''

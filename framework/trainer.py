@@ -113,7 +113,7 @@ class Trainer(object):
                 i, loss, accuracies))
 
             # select accuracy creterion
-            accuracy = accuracies[0]
+            #accuracy = accuracies[0]
 
             # F1, Precision, Recall
             #self.alt_eval()
@@ -123,17 +123,17 @@ class Trainer(object):
                 self._interpret(self.cache)
 
             # check for max accuracy
-            if accuracy > max(self._stats['accuracy']):
-                # get model parameters
-                self._model_params = self._model.get_params()
+            #if accuracy > max(self._stats['accuracy']):
+            #    # get model parameters
+            #    self._model_params = self._model.get_params()
 
             # stopping condition
             #  acc[i] < acc[i-1]
-            if accuracy < self._stats['accuracy'][-1]:
-                break
+            #if accuracy < self._stats['accuracy'][-1]:
+            #    break
 
             # add current accuracy to stats
-            self._stats['accuracy'].append(accuracy)
+            #self._stats['accuracy'].append(accuracy)
 
         # set best performing model params
         print(':: setting best model parameters')
@@ -187,78 +187,10 @@ class Trainer(object):
         return np.array(losses).mean(axis=0), np.array(accuracies).mean(axis=0)
 
     '''
-        F1, Precision, Recall
+        Save last run log
+         (after evaluation)
 
     '''
-    def alt_eval(self, feed=None):
-        feed = feed if feed else self._testfeed
-
-        # calc num of iterations
-        iterations = feed.get_n()//feed.get_batch_size()
-        
-        fetch = [ self._model._entity_prediction, self._model._ade_prediction ]
-
-        ef1s, eps, ers = [], [], []
-        af1s, aps, ars = [], [], []
-
-        
-        for j in range(iterations):
-            feed_dict = self.buildfeed(feed, self.EVAL)
-            eprediction, aprediction = self.execute(fetch, feed_dict)
-
-            try:
-                ground_truth = feed_dict[self._model._labels]
-                seqlen = ground_truth.shape[-1]
-                f1, precision, recall, _ = entity_f1_score(np.reshape(ground_truth, [seqlen,]),
-                                                    np.reshape(eprediction, [seqlen,]))
-                ef1s.append(f1)
-                eps.append(precision)
-                ers.append(recall)
-                elog.setLevel(logging.INFO)
-            except:
-                elog.setLevel(logging.INFO)
-                try:
-                    
-                    f1, precision, recall, _ = entity_f1_score(np.reshape(ground_truth, [seqlen,]),
-                                                    np.reshape(eprediction, [seqlen,]))
-                    elog.setLevel(logging.INFO)
-                except:
-                    print('==========')
-                    print('incorrect targets: {} in entities'.format(ground_truth))
-                    print(sys.exc_info())
-                    elog.setLevel(logging.INFO)
-            try:
-                ground_truth = feed_dict[self._model._ade_labels]
-                seqlen = ground_truth.shape[-1]
-                f1, precision, recall, _ = f1_score(np.reshape(ground_truth, [seqlen,]),
-                                                    np.reshape(aprediction, [seqlen,]))
-                af1s.append(f1)
-                aps.append(precision)
-                ars.append(recall)
-                elog.setLevel(logging.INFO)
-            except:
-                elog.setLevel(logging.DEBUG)
-                try:
-                    
-                    f1, precision, recall, _ = f1_score(np.reshape(ground_truth, [seqlen,]),
-                                                    np.reshape(aprediction, [seqlen,]))
-                    elog.setLevel(logging.INFO)
-                except:
-                    print('==========')
-                    print('incorrect targets: {} in ade'.format(ground_truth))
-                    print(sys.exc_info())
-                    elog.setLevel(logging.INFO)
-            
-                    
-        print('entity F1 score:{}'.format(sum(ef1s)/len(ef1s)))
-        print('entity precision:{}'.format(sum(eps)/len(eps)))
-        print('entity recall:{}'.format(sum(ers)/len(ers)))
-        
-        print('ade F1 score:{}'.format(sum(af1s)/len(af1s)))
-        print('ade precision:{}'.format(sum(aps)/len(aps)))
-        print('ade recall:{}'.format(sum(ars)/len(ars)))
-
-
     def save_cache(self):
         if not os.path.exists('.cache'):
             os.makedirs('.cache')
