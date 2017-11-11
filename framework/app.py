@@ -3,6 +3,8 @@ from dataset import Dataset
 from datafeed import DataFeed
 from batchops import op1
 
+from word2vocab import Word2Vocab
+
 from trainer import Trainer
 
 
@@ -11,11 +13,11 @@ def exp1():
     dataset = Dataset(pipe1)
 
     # create word2vec model
-    w2v = Word2Vocab()
+    w2v = Word2Vocab(dim=50)
 
-    trainfeed = DataFeed(op1, batch_size=32, 
+    trainfeed = DataFeed(op1, batch_size=3, 
             datapoints=dataset.trainset, w2v=w2v)
-    testfeed  = DataFeed(op1, batch_size=1,
+    testfeed  = DataFeed(op1, batch_size=3,
             datapoints=dataset.testset, w2v=w2v)
 
     # instantiate model
@@ -40,3 +42,6 @@ def exp1():
         trainer.train()
 
     '''
+
+if __name__ == '__main__':
+    exp1()

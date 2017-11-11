@@ -1,24 +1,25 @@
 import os
 import pickle
-import random
-
-import gensim
 import numpy as np
 
-PUBMED_FILEPATH = '../datasets/w2v/PubMed-w2v.bin'
-VOCAB_FILEPATH = 'vocabulary.txt'
+from word2vec import Word2Vec
+
+VOCABFILE = '.cache/vocabulary.txt'
+EMBFILE   = '.cache/embeddings.bin'
+
 
 class Word2Vocab(object):
 
-    def __init__(self, filepath=VOCAB_FILEPATH, d=200):
+    def __init__(self, dim):
         # read model from bin
         print(':: loading vocabulary from disk')
-        self.d = d
+        self.dim = dim
 
         # get list of words from vocab
         #  get subset of word2vec model
         #   account for padding and unknown
-        self._vocab = ['PAD', 'UNK'] + sorted(list(set(open(filepath).read().splitlines())))
+        self._vocab = ['PAD', 'UNK'] + sorted(list(
+            set(open(VOCABFILE).read().splitlines())))
         
         self._lookup = {w:i for i, w in enumerate(self._vocab)}
         
@@ -55,38 +56,41 @@ class Word2Vocab(object):
     def vocab_size(self):
         return len(self._vocab)
 
-    def load_embeddings(self, pretrained_model=PUBMED_FILEPATH, filepath='embeddings.bin'):
-        if os.path.exists(filepath):
-            self.emb = pickle.load(open(filepath, 'rb'))
+    def load_embeddings(self):
 
-        else:
-        
-            model = gensim.models.KeyedVectors.load_word2vec_format(pretrained_model,
-                                                                    binary=True)
-            embeddings = []
-            for w in self._vocab:
-                if w in model:
-                    emb = model[w]
-                    
-                elif w.lower() in model:
-                    emb =  model[w.lower()]
+        # check if embeddings saved in cache
+        if os.path.exists(EMBFILE):
+            # read from cache; return
+            return pickle.load(open(EMBFILE, 'rb'))
 
-                else:
-                    emb = np.zeros(self.d)
-              
-                embeddings.append(emb)
-
-            embeddings = np.stack(embeddings)
-            
-            self.emb = embeddings
-            pickle.dump(self.emb, open(filepath, 'wb'))
-
+        # read model from word2vec
+        model = Word2Vec(self.dim).get_model()
+        embeddings = []
+        for w in self._vocab:
+            # if word in model
+            if w in model:
+                emb = model[w]
+            # else check if lower-case of w in model
+            elif w.lower() in model:
+                emb =  model[w.lower()]
+            # return zero vector
+            else:
+                emb = np.zeros(self.dim)
+            # keep track of embedding 
+            embeddings.append(emb)
+        # np.array
+        embeddings = np.stack(embeddings)
+        # attach to self 
+        self.emb = embeddings
+        # write to cache
+        pickle.dump(self.emb, open(EMBFILE, 'wb'))
+        # make sure vocab size == num of embeddings
         assert self.vocab_size() == self.emb.shape[0]
 
         return self.emb
-                    
-        
+
+
 if __name__ == '__main__':
 
-    w = Word2Vocab()
+    w = Word2Vocab(50)
     w.load_embeddings()

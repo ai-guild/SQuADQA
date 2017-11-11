@@ -6,6 +6,7 @@ import json
 import random
 
 from nltk import word_tokenize
+from tqdm import tqdm
 
 from tests import *
 from info import *
@@ -87,8 +88,9 @@ def select_qa(qas, constraint_ = lambda x : True, verbose=True):
 '''
 def one_word_constraint(x):
     answers = x['answers']
-    return len([ ai for ai in answers
-            if len(word_tokenize(ai['text'])) > 1 ]) == 0
+    #return len([ ai for ai in answers
+    #        if len(word_tokenize(ai['text'])) > 1 ]) == 0
+    return len(word_tokenize(answers[0]['text'])) == 1
 
 '''
     Given a context, character-indexed START, END indices
@@ -135,6 +137,45 @@ def highlight_answer(sample):
     highlight_answer_by_indices(sample['context'], s, e)
 
 '''
+    Reduce text to set of words
+
+'''
+def reduce_(dataitems):
+    words = []
+    for item in dataitems:
+        words.extend(word_tokenize(
+            item['question'] + item['context']))
+
+    return set(words)
+
+'''
+    Dump vocabulary to disk
+
+'''
+def dump_vocabulary(words):
+    with open('.cache/vocabulary.txt', 'w') as f:
+        for w in words:
+            f.write(w)
+            f.write('\n')
+    # print info
+    Ip(':: {} words cached'.format(len(words)))
+
+'''
+    Basic Pipe
+
+'''
+def pipe0(filename):
+    # read from file
+    #  reduce data to contexts, QA-pairs
+    qas, contexts = reduce_jsonesque_data(
+            read_file(filename))
+
+    Ip(':: Read {} : {} QA pairs, {} contexts found!'.format(
+        filename, len(qas), len(contexts)))
+
+    return qas, contexts
+
+'''
     Constraints
     
      o One-word answers
@@ -143,16 +184,16 @@ def highlight_answer(sample):
 def pipe1():
 
     def process(filename):
-        # read from file
-        #  reduce data to contexts, QA-pairs
-        qas, contexts = reduce_jsonesque_data(
-                read_file(filename))
+        # 
+        # read QA-pairs, contexts
+        qas, contexts = pipe0(filename)
 
         # select samples with one-word answers
         qas = select_qa(qas, one_word_constraint)
 
         dataitems = []
-        for qa in qas:
+        Ip(':: Processing selected samples')
+        for qa in tqdm(qas):
             # (START, END) character indices of answer
             s, e = qa['answers'][0]
             # create and add sample
@@ -160,12 +201,20 @@ def pipe1():
                 'context'  : contexts[qa['context']], # get context by id
                 'question' : qa['question'],
                 'answer'   : char_indices_to_word_indices(s, e, 
-                    contexts[qa['context']])[0] # character answer indices to word index
+                    contexts[qa['context']])[0], # character answer indices to word index
+                'idx' : qa['idx']
                 })
 
         return dataitems
 
-    return process(TRAIN_FILE), process(DEV_FILE)
+    # execute process - get train, test
+    train = process(TRAIN_FILE) 
+    test  = process(DEV_FILE)
+
+    # dump vocabulary
+    dump_vocabulary(reduce_(train + test))
+
+    return train, test
                 
 
 if __name__ == '__main__':

@@ -47,6 +47,8 @@ def op1(batch, w2v):
         [ p._answer for p in batch],
             PAD=0), np.int32)
 
+    print(answer)
+
     return {
             'context' : w2v.encode(context),
             'question' : w2v.encode(question),
