@@ -17,9 +17,9 @@ def exp1():
     # create word2vec model
     w2v = Word2Vocab(dim=200)
 
-    trainfeed = DataFeed(op1, batch_size=128, 
+    trainfeed = DataFeed(op1, batch_size=32, 
             datapoints=dataset.trainset, w2v=w2v)
-    testfeed  = DataFeed(op1, batch_size=128,
+    testfeed  = DataFeed(op1, batch_size=32,
             datapoints=dataset.testset, w2v=w2v)
 
     # instantiate model

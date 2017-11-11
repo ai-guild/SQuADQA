@@ -5,7 +5,7 @@ import numpy as np
 from word2vec import Word2Vec
 
 VOCABFILE = '.cache/vocabulary.txt'
-EMBFILE   = '.cache/embeddings.bin'
+EMBFILE   = '.cache/embeddings.{}d.bin'
 
 
 class Word2Vocab(object):
@@ -59,9 +59,10 @@ class Word2Vocab(object):
     def load_embeddings(self):
 
         # check if embeddings saved in cache
-        if os.path.exists(EMBFILE):
+        if os.path.exists(EMBFILE.format(self.dim)):
             # read from cache; return
-            return pickle.load(open(EMBFILE, 'rb'))
+            return pickle.load(open(
+                EMBFILE.format(self.dim), 'rb'))
 
         # read model from word2vec
         model = Word2Vec(self.dim).get_model()
@@ -83,7 +84,8 @@ class Word2Vocab(object):
         # attach to self 
         self.emb = embeddings
         # write to cache
-        pickle.dump(self.emb, open(EMBFILE, 'wb'))
+        pickle.dump(self.emb, open(
+            EMBFILE.format(self.dim), 'wb'))
         # make sure vocab size == num of embeddings
         assert self.vocab_size() == self.emb.shape[0]
 
