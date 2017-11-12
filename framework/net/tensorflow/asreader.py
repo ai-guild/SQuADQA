@@ -137,7 +137,7 @@ class AttentionSumReader(NeuralNetwork):
                 tf.cast(labels, tf.int64), 
                 tf.argmax(probs, axis=-1))
 
-        return tf.reduce_sum(tf.cast(correct_labels, 
+        return tf.reduce_mean(tf.cast(correct_labels, 
             tf.float32))
 
 
