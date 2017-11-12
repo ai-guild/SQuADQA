@@ -17,16 +17,16 @@ def exp1():
     # create word2vec model
     w2v = Word2Vocab(dim=200)
 
-    trainfeed = DataFeed(op1, batch_size=32, 
+    trainfeed = DataFeed(op1, batch_size=90, 
             datapoints=dataset.trainset, w2v=w2v)
-    testfeed  = DataFeed(op1, batch_size=32,
+    testfeed  = DataFeed(op1, batch_size=2,
             datapoints=dataset.testset, w2v=w2v)
 
     # instantiate model
-    asreader = AttentionSumReader(hdim=200, emb_dim=200, 
+    asreader = AttentionSumReader(hdim=150, emb_dim=200, 
             embedding=w2v.load_embeddings(), 
-            vocab_size=w2v.vocab_size(), 
-            num_layers=3)
+            vocab_size=w2v.vocab_size(),
+            num_layers=2)
 
     # training
     with tf.Session() as sess:

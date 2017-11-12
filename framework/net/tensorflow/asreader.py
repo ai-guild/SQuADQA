@@ -85,9 +85,9 @@ class AttentionSumReader(NeuralNetwork):
             _, final_state = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw= cell(), cell_bw= cell(),
                     inputs = tf.nn.embedding_lookup(wemb, 
-                        self._context), # embed context 
+                        self._query), # embed context 
                     swap_memory=True, 
-                    sequence_length=context_lens, # lens without padding 
+                    sequence_length=query_lens, # lens without padding 
                     dtype=tf.float32)
 
             # Query Representation : final state of encoder
@@ -132,19 +132,13 @@ class AttentionSumReader(NeuralNetwork):
                 }
 
     def calc_accuracy(self, labels, probs):
-        mask = tf.cast(labels > 0, tf.float32)
-
-         # num of entities
-        num_entities = tf.cast(tf.count_nonzero(mask),
-                tf.float32)
-
         # calculate accuracy
         correct_labels = tf.equal(
                 tf.cast(labels, tf.int64), 
                 tf.argmax(probs, axis=-1))
 
-        return tf.reduce_sum(tf.cast(correct_labels,
-            tf.float32) * mask) / num_entities
+        return tf.reduce_sum(tf.cast(correct_labels, 
+            tf.float32))
 
 
 def execute_graph(model, t):
