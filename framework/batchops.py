@@ -34,6 +34,11 @@ def pad_seq(seqs, maxlen=0, PAD=PAD, truncate=False):
     
     return seqs
 
+'''
+    Data    : SQuAD single-word answers
+    Network : ASReader
+
+'''
 def op1(batch, w2v):
 
     # fetch sequences
@@ -41,6 +46,31 @@ def op1(batch, w2v):
         for p in batch ])
     # fetch the drugs
     question = pad_seq([ word_tokenize(p._question) 
+        for p in batch ])
+    # pad labels
+    answer = np.array(pad_seq( 
+        [ p._answer for p in batch],
+            PAD=0), np.int32)
+
+    return {
+            'context' : w2v.encode(context),
+            'question' : w2v.encode(question),
+            'answer' : answer
+            }
+
+'''
+    Data    : SQuAD single-word answers
+    Network : DCN without decoder
+
+'''
+def op2(batch, w2v):
+
+    # fetch sequences
+    l_o_contexts = [ word_tokenize(p._context) for p in batch ]
+    context = pad_seq(l_o_contexts, # maxlen = 600 -> from DCN, section 4.1
+            maxlen = min(600, seq_maxlen(l_o_contexts)))
+    # fetch the drugs
+    question = pad_seq([ word_tokenize(p._question)
         for p in batch ])
     # pad labels
     answer = np.array(pad_seq( 
