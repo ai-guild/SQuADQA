@@ -15,15 +15,15 @@ def exp1():
     dataset = Dataset(pipe1)
 
     # create word2vec model
-    w2v = Word2Vocab(dim=200)
+    w2v = Word2Vocab(dim=300)
 
-    trainfeed = DataFeed(op1, batch_size=128, 
+    trainfeed = DataFeed(op1, batch_size=64, 
             datapoints=dataset.trainset, w2v=w2v)
     testfeed  = DataFeed(op1, batch_size=16,
             datapoints=dataset.testset, w2v=w2v)
 
     # instantiate model
-    asreader = AttentionSumReader(hdim=200, emb_dim=200, 
+    asreader = AttentionSumReader(hdim=300, emb_dim=300,
             embedding=w2v.load_embeddings(), 
             vocab_size=w2v.vocab_size(),
             num_layers=3)

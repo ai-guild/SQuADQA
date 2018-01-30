@@ -1,10 +1,13 @@
-'''
-    Text Processor
+"""
+    Text Processing Nodes for
+        Stanford Question Answering Dataset 
+         (SQuAD)
 
-'''
+"""
 import json
 import random
 
+from pprint import pprint as pp
 from nltk import word_tokenize
 from tqdm import tqdm
 
@@ -55,7 +58,7 @@ def reduce_jsonesque_data(jdata):
     Construct for constraint-based selection from QA-pairs
 
 '''
-def select_qa(qas, constraint_ = lambda x : True, verbose=True):
+def select_qa(qas, constraint_, verbose=True):
     samples = []
     for qa in qas:
         if constraint_(qa):
@@ -99,7 +102,7 @@ def one_word_constraint(x):
 
 '''
 def char_indices_to_word_indices(s, e, context):
-    # tokenze context
+    # tokenize context
     tokens = word_tokenize(context)
     # get subsequence
     sub = context[s:e]
@@ -109,7 +112,20 @@ def char_indices_to_word_indices(s, e, context):
     end = offset + len(word_tokenize(sub))
 
     assert start < len(word_tokenize(context)), (context, s, e)
-    assert end <= len(word_tokenize(context)), (context, s, e)
+    #assert end <= len(word_tokenize(context)), (context, s, e)
+    if end > len(word_tokenize(context)):
+        print('_______end > len__________')
+        print(context, s, e)
+
+    if len(word_tokenize(sub)) != len(tokens[start:end]):
+        print('_______len not equal__________')
+        print(context, s, e, start, end)
+
+    if word_tokenize(sub)[0] != tokens[start]:
+        print('_______first word not equal__________')
+        print(sub)
+        print(tokens[start:end])
+        input()
 
     return start, end
 
@@ -164,6 +180,37 @@ def dump_vocabulary(words):
     Ip(':: {} words cached'.format(len(words)))
 
 '''
+    Process
+     - runs basic pipe
+     - applies constraint
+     - return list of dictionaries
+
+'''
+def process(filename, constraint= lambda x : True):
+    # 
+    # read QA-pairs, contexts
+    qas, contexts = pipe0(filename)
+
+    # select samples with one-word answers
+    # qas = select_qa(qas, constraint)
+
+    dataitems = []
+    Ip(':: Processing selected samples')
+    for qa in tqdm(qas):
+        # (START, END) character indices of answer
+        s, e = qa['answers'][0]
+        # create and add sample
+        dataitems.append({
+            'context'  : contexts[qa['context']], # get context by id
+            'question' : qa['question'],
+            'answer'   : char_indices_to_word_indices(s, e, 
+                contexts[qa['context']]), # character answer indices to word index
+            'idx' : qa['idx']
+            })
+
+    return dataitems
+
+'''
     Basic Pipe
 
 '''
@@ -186,39 +233,42 @@ def pipe0(filename):
 '''
 def pipe1():
 
-    def process(filename):
-        # 
-        # read QA-pairs, contexts
-        qas, contexts = pipe0(filename)
+    def process1(filename):
+        samples = []
+        for sample in process(filename, one_word_constraint):
+            sample['answer'] = sample['answer'][0]
+            samples.append(sample)
 
-        # select samples with one-word answers
-        qas = select_qa(qas, one_word_constraint)
-
-        dataitems = []
-        Ip(':: Processing selected samples')
-        for qa in tqdm(qas):
-            # (START, END) character indices of answer
-            s, e = qa['answers'][0]
-            # create and add sample
-            dataitems.append({
-                'context'  : contexts[qa['context']], # get context by id
-                'question' : qa['question'],
-                'answer'   : char_indices_to_word_indices(s, e, 
-                    contexts[qa['context']])[0], # character answer indices to word index
-                'idx' : qa['idx']
-                })
-
-        return dataitems
+        return samples
 
     # execute process - get train, test
-    train = process(TRAIN_FILE) 
-    test  = process(DEV_FILE)
+    train = process1(TRAIN_FILE)
+    test  = process1(DEV_FILE)
 
     # dump vocabulary
     dump_vocabulary(reduce_(train + test))
 
     return train, test
                 
+'''
+    Constraints
+    
+     o None
+
+'''
+def pipe2():
+
+    # execute process - get train, test
+    train = process(TRAIN_FILE)
+    test  = process(DEV_FILE)
+
+    # dump vocabulary
+    dump_vocabulary(reduce_(train + test))
+
+    return train, test
+
 
 if __name__ == '__main__':
-    pipe1()
+    qas, contexts = pipe0(TRAIN_FILE)
+    pp(qas[1246])
+    pp(contexts[1246])

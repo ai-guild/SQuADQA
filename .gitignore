@@ -11,3 +11,4 @@ __pycache__/
 *.pkl
 *.bin
 *.txt
+docs/ # notes, papers
